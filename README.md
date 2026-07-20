@@ -121,6 +121,25 @@ Medication data is personal health information. Storing it in plaintext in a SQL
 
 ---
 
+## Eval Harness
+
+MediSafe includes an LLM-as-judge evaluation harness to catch regressions when prompts, models, or tools change.
+
+```bash
+python -m eval.eval
+```
+
+Each of the 10 test cases runs two checks:
+
+- **Rule-based** — deterministic assertions: did the right tool get called? Do expected keywords appear in the response?
+- **LLM judge** — a separate Gemini call scores the response against a plain-English rubric (e.g. "does the response include a medical disclaimer?")
+
+Test categories: `routing` · `health_safety` · `ux`
+
+The harness uses a temporary database so it never touches your real medication data.
+
+---
+
 ## Course Concepts Demonstrated
 
 This project satisfies the requirement to demonstrate **at least three** key concepts from the 5-Day AI Agents course:
@@ -158,6 +177,10 @@ medisafe-agent/
 │   │
 │   └── security/
 │       └── encryption.py          Fernet encrypt/decrypt helpers; key lifecycle management
+│
+├── eval/
+│   ├── test_cases.py              10 test cases across routing, health safety, and UX categories
+│   └── eval.py                    Eval harness — rule-based checks + LLM-as-judge via Gemini
 │
 └── tests/
     ├── conftest.py                Fixtures: isolated temp DB and key for every test

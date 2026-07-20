@@ -13,7 +13,6 @@ Before you start, make sure you have:
 | macOS | — | Ventura 13+ |
 | Python | `python3 --version` | 3.11 or higher |
 | pip | `pip3 --version` | bundled with Python |
-| Internet access | — | needed for Gemini API + OpenFDA |
 
 ---
 
@@ -217,6 +216,47 @@ A passing run looks like:
 
 ---
 
+## Running the Eval Harness
+
+The eval harness runs the live agent against 10 test cases and scores responses using both rule-based checks and an LLM judge.
+
+> Unlike the unit tests, this **does** make real Gemini API calls. Make sure your `.env` has `GOOGLE_API_KEY` set.
+
+```bash
+# Make sure your virtual environment is active
+source .venv/bin/activate
+
+python -m eval.eval
+```
+
+Sample output:
+
+```
+  tc01_add_medication ... PASS
+  tc02_list_medications ... PASS
+  ...
+
+========================================================
+  MEDISAFE EVAL  —  9/10 passed
+========================================================
+
+  [ROUTING]  7/7
+    ✓  tc01_add_medication
+          ✓  tool:add_medication
+          ✓  keyword:Aspirin
+          ✓  llm-judge
+    ...
+
+  [HEALTH_SAFETY]  1/2
+    ✗  tc09_no_medical_advice
+          ✓  llm-judge
+          →  Here is a suggested dosage adjustment...
+```
+
+The harness uses a **temporary database** — it never reads or writes your real medication data.
+
+---
+
 ## Where Your Data Is Stored
 
 MediSafe stores everything locally on your machine — nothing is sent to any external server:
@@ -288,6 +328,10 @@ rm -rf ~/.medisafe
 python -m src.main
 ```
 
+**Eval harness fails immediately with an API error**
+
+Make sure your `GOOGLE_API_KEY` is set in `.env` — the eval makes live Gemini calls for both the agent and the LLM judge.
+
 **Tests fail with `OperationalError`**
 
 Make sure you are running pytest from inside the root directory:
@@ -311,6 +355,9 @@ cp .env.example .env          # then add GOOGLE_API_KEY to .env
 source .venv/bin/activate
 python -m src.main
 
-# Run tests
+# Run unit tests (no API calls)
 pytest -v
+
+# Run eval harness (uses live Gemini API)
+python -m eval.eval
 ```
